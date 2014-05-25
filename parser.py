@@ -4,7 +4,7 @@ class Command(object):
     """Parse and Generate new Commands for the xmpp-communication protocoll"""
     def __init__(self, c=None):
         self.c = c
-        self.params = []
+        self.params = {}
         if(c):
             self.parse(c)
 
@@ -14,7 +14,7 @@ class Command(object):
 #            return self.c
         s = "%s" %self.command
         for param in self.params:
-            s = s + "\n%s "%len(param['values']) + param['name'] + "\n%s" % "\n".join(param['values'])
+            s = s + "\n%s "%len(self.params[param]) + "%s\n%s" % (param, self.params[param])
         return s
 
     def parse(self, s):
@@ -24,16 +24,22 @@ class Command(object):
         while(len(lines) > 0):
             current = lines.pop(0).split(" ")
             num_lines = int(current[0])
-            self.params.append({"name" : current[1], "values" : []})
+            current_params = []
             for i in range(0, num_lines):
                 param = lines.pop(0)
-                self.params[-1]['values'].append(param)
+                current_params.append(param)
+            self.params[current[1]] =  "\n".join(current_params)
 
-    def get_prefix(self):
+
+    def getPrefix(self):
         split = self.command.split(".")
-        if(len(split) < 2)
+        if(len(split) < 2):
             return None
         return split[0]
+
+    def getParams(self):
+        """getter for params"""
+        return params
 
 if __name__ == '__main__':
     a = Command(c="ic2.read16\n1 device\n0x22\n1 register\n0x95")
