@@ -11,13 +11,18 @@ import xmpp
 # [color]
 # [modus]
 
-def send_command_to_ampel(conn, code):
-    cmd = "i3c.call\n1 device\n0x20\n1 command\n0x2\n1 data\n%s" %code
-    print "send to ampel:"
-    print cmd
-    conn.send(xmpp.Message("ampel.i3c@platon", cmd))
 
-def handle_set_command(command, conn):
+def translate_response(cmdself):
+    """docstring for translate_response"""
+    
+    pass
+
+def send_command_to_ampel(conn, code, token):
+    """ send the new command to the ampel """
+    cmd = xmpp.Message("ampel.i3c@platon","i3c.call\n%s\n1 device\n0x20\n1 command\n0x2\n1 data\n%s" %(token, hex(code)))
+    conn.send(cmd)
+
+def handle_set_command(command, conn, token):
     """ handle set command and send stuff to i2c """
     color = None
     blink = False
@@ -33,13 +38,12 @@ def handle_set_command(command, conn):
                 blink = True
                 i2c_code = i2c_code | 0x8
     print "blink: %s, color: %s, i2c_code: %s" %(blink, color, i2c_code)
-    send_command_to_ampel(conn, i2c_code)
+    send_command_to_ampel(conn, i2c_code, token)
 
-def process(msg, conn):
-    """process message send to ampel"""
-    command = Command(msg.getBody())
+def process(command, conn, token):
+    """ process message send to ampel """
     if command.getPrefix() == "ampel":
         print command.getParams()
         if command.command == "ampel.set":
-            handle_set_command(command, conn)
+            handle_set_command(command, conn, token)
     return None

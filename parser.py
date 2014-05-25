@@ -13,14 +13,24 @@ class Command(object):
 #        if self.c:
 #            return self.c
         s = "%s" %self.command
+        s = s + "\n%s"   %self.token
         for param in self.params:
-            s = s + "\n%s "%len(self.params[param]) + "%s\n%s" % (param, self.params[param])
+            s = s + "\n%s "  %len(self.params[param].split("\n"))
+            s = s + "%s\n%s" %(param, self.params[param])
         return s
+
+    def getToken(self):
+        """return answer token"""
+        return self.token
+
+    def setToken(self, token):
+        self.token = token
 
     def parse(self, s):
         """ parse command from string """
         lines = s.split("\n")
         self.command = lines.pop(0)
+        self.token = lines.pop(0)
         while(len(lines) > 0):
             current = lines.pop(0).split(" ")
             num_lines = int(current[0])
@@ -42,14 +52,14 @@ class Command(object):
         return self.params
 
 if __name__ == '__main__':
-    a = Command(c="ic2.read16\n1 device\n0x22\n1 register\n0x95")
+    a = Command(c="ic2.read16\ntoken\n1 device\n0x22\n1 register\n0x95")
     print a.command
     print "====="
     print a.params
 
     print a.toString()
 
-    hw = Command(c="helloworld\n1 subject\nhallo welt!\n3 body\nHallo Welt,\nich kann auch\nZeilenumbrueche!")
+    hw = Command(c="helloworld\n45627\n1 subject\nhallo welt!\n3 body\nHallo Welt,\nich kann auch\nZeilenumbrueche!")
     print hw.command
     print "====="
     print hw.params

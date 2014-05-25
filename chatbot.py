@@ -4,13 +4,37 @@ import xmpp
 import argparse
 import sys
 import module_ampel as ampel
+from parser import Command
+
 
 def messageCB(conn, msg):
+    reply = None
     user = xmpp.protocol.JID(msg.getFrom())
-    print "%s: %s\n" %(user.getStripped(), msg.getBody())
-    reply = ampel.process(msg, conn)
-    if reply:
-        conn.send(xmpp.Message(user.getStripped,reply))
+    print "%s: %s\n" %(user, msg.getBody())
+    # answer with same Thread ID ...
+    print msg.getType()
+    cmd = Command(msg.getBody())
+    print cmd.getToken()
+    print messageCB.tokens
+    if str(cmd.getToken()) in messageCB.tokens:
+        to = messageCB.tokens[str(cmd.getToken())]
+        to_cmd = Command(to.getBody())
+        cmd.setToken(to_cmd.getToken())
+        reply = to.buildReply(text = cmd.toString())
+        reply.setType("chat")
+        print reply.getBody()
+        print reply.getThread()
+        print reply.getType()
+        conn.send(reply)
+        return None
+
+    messageCB.tokens[str(messageCB.token)] = msg
+    if cmd.getPrefix() == "ampel":
+        ampel.process(cmd, conn, messageCB.token)
+    messageCB.token += 1
+
+messageCB.token = 0
+messageCB.tokens = {}
 
 def stepOn(conn):
     """ parse next piece of stuff """
