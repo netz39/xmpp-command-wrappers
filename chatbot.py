@@ -8,7 +8,7 @@ import module_ampel as ampel
 def messageCB(conn, msg):
     user = xmpp.protocol.JID(msg.getFrom())
     print "%s: %s\n" %(user.getStripped(), msg.getBody())
-    reply = ampel.process(msg)
+    reply = ampel.process(msg, conn)
     if reply:
         conn.send(xmpp.Message(user.getStripped,reply))
 

@@ -39,7 +39,7 @@ class Command(object):
 
     def getParams(self):
         """getter for params"""
-        return params
+        return self.params
 
 if __name__ == '__main__':
     a = Command(c="ic2.read16\n1 device\n0x22\n1 register\n0x95")
