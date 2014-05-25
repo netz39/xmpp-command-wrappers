@@ -29,6 +29,12 @@ class Command(object):
                 param = lines.pop(0)
                 self.params[-1]['values'].append(param)
 
+    def get_prefix(self):
+        split = self.command.split(".")
+        if(len(split) < 2)
+            return None
+        return split[0]
+
 if __name__ == '__main__':
     a = Command(c="ic2.read16\n1 device\n0x22\n1 register\n0x95")
     print a.command
