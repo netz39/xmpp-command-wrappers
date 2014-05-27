@@ -11,15 +11,46 @@ import xmpp
 # [color]
 # [modus]
 
+ampel_xmpp_account = "i3c.wittgenstein@platon"
+SET_LIGHT = 0x02
+GET_LIGHT = 0x01
 
-def translate_response(cmdself):
+def color_from_i2c_byte(i2c_code):
+    """compute color_from_i2c_byte"""
+    i2c_byte = int(i2c_code, 16) & 0x3
+    if i2c_byte == 2:
+        return "green"
+    if i2c_byte == 1:
+        return "red"
+    return "none"
+
+def modus_from_i2c_byte(i2c_code):
+    """compute color_from_i2c_byte"""
+    i2c_byte = int(i2c_code, 16) & 0x8
+    if i2c_byte == 0:
+        return "blink"
+    return "solid"
+
+
+def translate_response(cmd):
     """docstring for translate_response"""
-    
-    pass
+    response = Command()
+    response.command = "ampel.response"
+    response.setToken(cmd.getToken())
+    try:
+        response.params["color"] = color_from_i2c_byte(cmd.params["i2c.response"])
+        response.params["modus"] = modus_from_i2c_byte(cmd.params["i2c.response"])
+    except KeyError, k:
+        print k
+        response.params["error"] = "i2c.response missing"
+    return response
 
-def send_command_to_ampel(conn, code, token):
+def send_command_to_ampel(conn, token, i2c_command, data=None):
     """ send the new command to the ampel """
-    cmd = xmpp.Message("ampel.i3c@platon","i3c.call\n%s\n1 device\n0x20\n1 command\n0x2\n1 data\n%s" %(token, hex(code)))
+    cmd = Command("i3c.call\n%s\n1 device\n0x20\n1 command\n%s" %(token, hex(i2c_command)))
+    if data:
+        cmd.params["data"] = data
+    cmd = xmpp.Message(ampel_xmpp_account, cmd.toString())
     conn.send(cmd)
 
 def handle_set_command(command, conn, token):
@@ -38,7 +69,13 @@ def handle_set_command(command, conn, token):
                 blink = True
                 i2c_code = i2c_code | 0x8
     print "blink: %s, color: %s, i2c_code: %s" %(blink, color, i2c_code)
-    send_command_to_ampel(conn, i2c_code, token)
+    send_command_to_ampel(conn, token, SET_LIGHT, data=hex(i2c_code))
+
+def handle_status_command(command, conn, token):
+    """handle status command -> send back current status"""
+    print "Request satus from ampel"
+    send_command_to_ampel(conn, token, GET_LIGHT)
+
 
 def process(command, conn, token):
     """ process message send to ampel """
@@ -46,4 +83,6 @@ def process(command, conn, token):
         print command.getParams()
         if command.command == "ampel.set":
             handle_set_command(command, conn, token)
+        if command.command == "ampel.status":
+            handle_status_command(command, conn, token)
     return None
